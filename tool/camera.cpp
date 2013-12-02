@@ -14,9 +14,28 @@ unsigned long getUnixTime()
 
 int main(int argc, char *argv[])
 {
+  if (argc != 2 && argc != 3)
+  {
+    printf("usage: %s <video> <calib>\n", argv[0]);
+    return -1;
+  }
   VideoCapture cap(argv[1]);
+  bool isCalib = argc == 3;
+
   namedWindow("video");
   namedWindow("img");
+
+  Mat camMat;
+  Mat distCoef;
+
+  if (isCalib)
+  {
+    namedWindow("undist");
+
+    FileStorage fs(argv[2], FileStorage::READ);
+    fs["camera_matrix"] >> camMat;
+    fs["distortion_coefficients"] >> distCoef;
+  }
 
   Mat frame, img;
 
@@ -24,7 +43,13 @@ int main(int argc, char *argv[])
   while (cap.read(frame))
   {
     imshow("video", frame);
-    char w = waitKey(30);
+    if (isCalib)
+    {
+      Mat undistorted;
+      undistort(frame, undistorted, camMat, distCoef);
+      imshow("undist", undistorted);
+    }
+    char w = waitKey(1);
     if (w == 'q') return 0;
     if (w != -1)
     {
@@ -32,7 +57,7 @@ int main(int argc, char *argv[])
       unsigned long time = getUnixTime();
       char buf[128];
       //sprintf(buf, "%ld.jpg", time);
-      sprintf(buf, "%d.jpg", idx);
+      sprintf(buf, "%d.jpg", idx++);
       imwrite(buf, img);
       imshow("img", img);
     }
