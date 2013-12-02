@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
   readInputList(ifile, nameArray, homoArray);
 
   vector<VideoCapture> capArray;
+  int height = 0;
   for (int i=0, n=nameArray.size(); i<n; ++i)
   {
     VideoCapture cap(nameArray[i]);
@@ -34,12 +35,14 @@ int main(int argc, char *argv[])
     }
     capArray.push_back(cap);
     namedWindow(nameArray[i]);
+    moveWindow(nameArray[i], 1200, height);
+    height += 300;
   }
 
 #ifdef OCL
-  vector<ocl::Info> oclInfo;
-  ocl::getDevice(oclInfo);
-  ocl::setDevice(oclInfo[0]);
+  ocl::DevicesInfo devices;
+  ocl::getOpenCLDevices(devices);
+  ocl::setDevice(devices[0]);
 #endif
 
 #ifdef OCL
@@ -50,9 +53,16 @@ int main(int argc, char *argv[])
   hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
 #endif
 
+  Mat map(Size(1000, 700), CV_8UC3);
+  Mat mapCanvas;
+  namedWindow("map");
+  moveWindow("map", 0, 0);
+
   char key = 0;
   while (key != 'q')
   {
+    mapCanvas = map.clone();
+    vector<Point2d> poseArray;
     for (int i=0, n=capArray.size(); i<n; ++i)
     {
       Mat frame;
@@ -75,10 +85,41 @@ int main(int argc, char *argv[])
         int x = (found[j].tl().x + found[j].br().x) / 2;
         int y = (found[j].tl().y +  2 * found[j].br().y) / 3;
         Point2d pose = homoTransform(Point2d(x, y), homoArray[i]);
-        //cross(mapCanvas, rx, ry, RED);
+        poseArray.push_back(pose);
       }
       imshow(nameArray[i], frame);
     }
+    vector<Point2d> centerArray;
+    vector<int> countArray;
+    for (int i=0, n=poseArray.size(); i<n; ++i)
+    {
+      bool matched = false;
+      for (int j=0, k=centerArray.size(); j<k; ++j)
+      {
+        int dx = poseArray[i].x - poseArray[j].x;
+        int dy = poseArray[i].y - poseArray[j].y;
+        int d = dx * dx + dy * dy;
+        printf("%d\n", d);
+        if (d < 15000)
+        {
+          matched = true;
+          centerArray[j].x =
+            (countArray[j] * centerArray[j].x + poseArray[i].x)
+            / (countArray[j] + 1);
+          countArray[j]++;
+        }
+      }
+      if (!matched)
+      {
+        centerArray.push_back(poseArray[i]);
+        countArray.push_back(1);
+      }
+    }
+    for (int i=0, n=centerArray.size(); i<n; ++i)
+    {
+      cross(mapCanvas, centerArray[i].y, centerArray[i].x, WHITE);
+    }
+    imshow("map", mapCanvas);
     key = waitKey(1);
   }
 }
