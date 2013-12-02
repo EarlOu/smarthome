@@ -1,5 +1,7 @@
 #include <opencv2/opencv.hpp>
 #include <stdlib.h>
+#include <stdio.h>
+
 using namespace cv;
 using std::pair;
 

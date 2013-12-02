@@ -69,11 +69,11 @@ int main(int argc, char *argv[])
       Mat calFrame = grayFrame;
 #endif
       hog.detectMultiScale(calFrame, found, 0);
-      for (int i=0, n=found.size(); i<n; ++i)
+      for (int j=0, n=found.size(); j<n; ++j)
       {
-        rectangle(frame, found[i].tl(), found[i].br(), RED, 3);
-        int x = (found[i].tl().x + found[i].br().x) / 2;
-        int y = (found[i].tl().y +  2 * found[i].br().y) / 3;
+        rectangle(frame, found[j].tl(), found[j].br(), RED, 3);
+        int x = (found[j].tl().x + found[j].br().x) / 2;
+        int y = (found[j].tl().y +  2 * found[j].br().y) / 3;
         Point2d pose = homoTransform(Point2d(x, y), homoArray[i]);
         //cross(mapCanvas, rx, ry, RED);
       }
