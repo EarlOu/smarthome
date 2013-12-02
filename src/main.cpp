@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
       else printf("%d", count[i]);
     }
     printf("]\n");
+    fflush(stdout);
 
     imshow("map", mapCanvas);
     key = waitKey(1);
