@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         int dx = poseArray[i].x - poseArray[j].x;
         int dy = poseArray[i].y - poseArray[j].y;
         int d = dx * dx + dy * dy;
-        if (d < 20000)
+        if (d < 10000)
         {
           matched = true;
           centerArray[j].x =
@@ -118,6 +118,25 @@ int main(int argc, char *argv[])
     {
       cross(mapCanvas, centerArray[i].y, centerArray[i].x, WHITE);
     }
+
+    // Count number in each block for demo
+    int count[6] = {0};
+    for (int i=0, n=centerArray.size(); i<n; ++i)
+    {
+      int y = centerArray[i].y;
+      int x = centerArray[i].x;
+      int idx = 2 * ((y - 258) / 121) + (x / 326);
+      if (idx > 5) continue;
+      count[idx]++;
+    }
+    printf("[");
+    for (int i=0; i<6; ++i)
+    {
+      if (i != 5) printf("%d, ", count[i]);
+      else printf("%d", count[i]);
+    }
+    printf("]\n");
+
     imshow("map", mapCanvas);
     key = waitKey(1);
   }
