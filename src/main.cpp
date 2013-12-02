@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
   hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
 #endif
 
-  Mat map(Size(1000, 700), CV_8UC3);
+  Mat map = imread("floorplan.png");
   Mat mapCanvas;
   namedWindow("map");
   moveWindow("map", 0, 0);
@@ -99,8 +99,7 @@ int main(int argc, char *argv[])
         int dx = poseArray[i].x - poseArray[j].x;
         int dy = poseArray[i].y - poseArray[j].y;
         int d = dx * dx + dy * dy;
-        printf("%d\n", d);
-        if (d < 15000)
+        if (d < 20000)
         {
           matched = true;
           centerArray[j].x =
