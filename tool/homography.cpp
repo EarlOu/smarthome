@@ -52,7 +52,7 @@ static void onMouse(int event, int x, int y, int flag, void* param)
     rx /= r;
     ry /= r;
     Mat mapCanvas = map.clone();
-    cross(mapCanvas, rx, ry, RED);
+    cross(mapCanvas, ry, rx, RED);
     imshow("map", mapCanvas);
     return;
   }
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 
   VideoCapture cap(argv[1]);
   cap.read(frame);
-  map.create(Size(300, 300), CV_8UC3);
+  map.create(Size(1000, 700), CV_8UC3);
 
   namedWindow("img");
   namedWindow("map");
