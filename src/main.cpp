@@ -14,9 +14,9 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-  if (argc != 2)
+  if (argc != 3)
   {
-    printf("usage: %s <video_list>\n", argv[0]);
+    printf("usage: %s <video_list> <map_img>\n", argv[0]);
     return -1;
   }
   FILE* ifile = fopen(argv[1], "r");
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
   hog.setSVMDetector(HOGDescriptor::getDaimlerPeopleDetector());
 #endif
 
-  Mat map = imread("floorplan.png");
+  Mat map = imread(argv[2]);
   Mat mapCanvas;
   namedWindow("map");
   moveWindow("map", 0, 0);
@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 #else
       Mat calFrame = grayFrame;
 #endif
-      hog.detectMultiScale(calFrame, found, 0);
+      hog.detectMultiScale(calFrame, found, 0.5);
       for (int j=0, n=found.size(); j<n; ++j)
       {
         rectangle(frame, found[j].tl(), found[j].br(), RED, 3);
