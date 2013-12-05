@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/ocl/ocl.hpp>
+#include <opencv2/nonfree/gpu.hpp>
 #include <stdio.h>
 #include <vector>
 
@@ -47,10 +48,11 @@ int main(int argc, char *argv[])
 
 #ifdef OCL
   ocl::HOGDescriptor hog;
-  hog.setSVMDetector(ocl::HOGDescriptor::getDefaultPeopleDetector());
+  hog.setSVMDetector(ocl::HOGDescriptor::getPeopleDetector48x96());
 #else
   HOGDescriptor hog;
-  hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
+  hog.winSize=Size(48, 96);
+  hog.setSVMDetector(HOGDescriptor::getDaimlerPeopleDetector());
 #endif
 
   Mat map = imread("floorplan.png");
