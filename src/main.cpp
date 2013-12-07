@@ -3,6 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/ocl/ocl.hpp>
+#include <opencv2/nonfree/gpu.hpp>
 #include <stdio.h>
 #include <vector>
 
@@ -11,11 +12,14 @@ using namespace std;
 
 //#define OCL
 
+#define SMOOTH_LENGTH 15
+#define MESSAGE_PERIOD 75
+
 int main(int argc, char *argv[])
 {
-  if (argc != 2)
+  if (argc != 3)
   {
-    printf("usage: %s <video_list>\n", argv[0]);
+    printf("usage: %s <video_list> <map_img>\n", argv[0]);
     return -1;
   }
   FILE* ifile = fopen(argv[1], "r");
@@ -47,18 +51,22 @@ int main(int argc, char *argv[])
 
 #ifdef OCL
   ocl::HOGDescriptor hog;
-  hog.setSVMDetector(ocl::HOGDescriptor::getDefaultPeopleDetector());
+  hog.setSVMDetector(ocl::HOGDescriptor::getPeopleDetector48x96());
 #else
   HOGDescriptor hog;
-  hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
+  hog.winSize=Size(48, 96);
+  hog.setSVMDetector(HOGDescriptor::getDaimlerPeopleDetector());
+//  hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
 #endif
 
-  Mat map = imread("floorplan.png");
+  Mat map = imread(argv[2]);
   Mat mapCanvas;
   namedWindow("map");
   moveWindow("map", 0, 0);
 
   char key = 0;
+  int counter = 0;
+  int history_sum[6] = {0};
   while (key != 'q')
   {
     mapCanvas = map.clone();
@@ -114,10 +122,6 @@ int main(int argc, char *argv[])
         countArray.push_back(1);
       }
     }
-    for (int i=0, n=centerArray.size(); i<n; ++i)
-    {
-      cross(mapCanvas, centerArray[i].y, centerArray[i].x, WHITE);
-    }
 
     // Count number in each block for demo
     int count[6] = {0};
@@ -129,16 +133,34 @@ int main(int argc, char *argv[])
       if (idx > 5) continue;
       count[idx]++;
     }
-    printf("[");
-    for (int i=0; i<6; ++i)
-    {
-      if (i != 5) printf("%d, ", count[i]);
-      else printf("%d", count[i]);
-    }
-    printf("]\n");
-    fflush(stdout);
 
-    imshow("map", mapCanvas);
+    if (counter % SMOOTH_LENGTH == 0)
+    {
+      for (int i=0, n=centerArray.size(); i<n; ++i)
+      {
+        cross(mapCanvas, centerArray[i].y, centerArray[i].x, WHITE);
+      }
+      imshow("map", mapCanvas);
+    }
+    if (counter % MESSAGE_PERIOD == 0)
+    {
+      printf("[");
+      for (int i=0; i<6; ++i)
+      {
+        if (i != 5) printf("%d, ",
+            (int) round(history_sum[i]/(double) MESSAGE_PERIOD));
+        else printf("%d",
+            (int) round(history_sum[i]/(double) MESSAGE_PERIOD));
+      }
+      printf("]\n");
+      fflush(stdout);
+      for (int i=0; i<6; ++i) history_sum[i] = 0;
+    }
+    else
+    {
+      for (int i=0; i<6; ++i) history_sum[i] += count[i];
+    }
     key = waitKey(1);
+    counter++;
   }
 }
