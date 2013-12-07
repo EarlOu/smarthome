@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
   HOGDescriptor hog;
   hog.winSize=Size(48, 96);
   hog.setSVMDetector(HOGDescriptor::getDaimlerPeopleDetector());
+//  hog.setSVMDetector(HOGDescriptor::getDefaultPeopleDetector());
 #endif
 
   Mat map = imread(argv[2]);
@@ -85,7 +86,7 @@ int main(int argc, char *argv[])
 #else
       Mat calFrame = grayFrame;
 #endif
-      hog.detectMultiScale(calFrame, found, 0.5);
+      hog.detectMultiScale(calFrame, found, 0);
       for (int j=0, n=found.size(); j<n; ++j)
       {
         rectangle(frame, found[j].tl(), found[j].br(), RED, 3);
