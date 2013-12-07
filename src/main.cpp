@@ -14,6 +14,7 @@ using namespace std;
 
 #define SMOOTH_LENGTH 15
 #define MESSAGE_PERIOD 75
+#define FILE_SEG_PERIOD 600000
 
 int main(int argc, char *argv[])
 {
@@ -27,8 +28,10 @@ int main(int argc, char *argv[])
   vector<string> nameArray;
   readInputList(ifile, nameArray, homoArray);
 
+  vector<VideoWriter> writerArray;
   vector<VideoCapture> capArray;
   int height = 0;
+  size_t time = 0;
   for (int i=0, n=nameArray.size(); i<n; ++i)
   {
     VideoCapture cap(nameArray[i]);
@@ -41,6 +44,7 @@ int main(int argc, char *argv[])
     namedWindow(nameArray[i]);
     moveWindow(nameArray[i], 1200, height);
     height += 300;
+
   }
 
 #ifdef OCL
@@ -69,6 +73,25 @@ int main(int argc, char *argv[])
   int history_sum[6] = {0};
   while (key != 'q')
   {
+    size_t t = getUnixTime();
+    if (t - time > FILE_SEG_PERIOD)
+    {
+      time = t;
+      for (int k=0, n=writerArray.size(); k<n; writerArray[k++].release());
+      writerArray.clear();
+      for (int k=0, n=capArray.size(); k<n; ++k)
+      {
+        char outputName[128];
+        sprintf(outputName,
+            "/media/medialab/26C00F78C00F4E0D/Recording/%ld-%d.avi",
+            time, k);
+        VideoWriter writer(outputName, CV_FOURCC('M', 'J', 'P', 'G'),
+            30, Size(capArray[k].get(CV_CAP_PROP_FRAME_WIDTH),
+                capArray[k].get(CV_CAP_PROP_FRAME_HEIGHT)));
+        writerArray.push_back(writer);
+      }
+    }
+
     mapCanvas = map.clone();
     vector<Point2d> poseArray;
     for (int i=0, n=capArray.size(); i<n; ++i)
@@ -76,6 +99,8 @@ int main(int argc, char *argv[])
       Mat frame;
       VideoCapture& cap = capArray[i];
       if (!cap.read(frame)) return 0;
+
+      writerArray[i].write(frame);
 
       // detecting human
       Mat grayFrame;
