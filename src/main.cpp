@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
       hog.detectMultiScale(calFrame, found, 0);
       for (int j=0, n=found.size(); j<n; ++j)
       {
-        rectangle(frame, found[j].tl(), found[j].br(), RED, 3);
+        rectangle(frame, found[j].tl(), found[j].br(), GRAY, 3);
         int x = (found[j].tl().x + found[j].br().x) / 2;
         int y = (found[j].tl().y +  2 * found[j].br().y) / 3;
         Point2d pose = homoTransform(Point2d(x, y), homoArray[i]);
